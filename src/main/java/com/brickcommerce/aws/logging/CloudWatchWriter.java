@@ -21,8 +21,6 @@ public class CloudWatchWriter {
     private static final int AWS_DRAIN_LIMIT = 256; // 1MB of 4K messages -- estimate
     private static final int AWS_LOG_STREAM_MAX_QUEUE_DEPTH = 10000;
 
-    private static Logger logger = LoggerFactory.getLogger(CloudWatchWriter.class);
-
     private final String logGroupName;
     private final String logStreamName;
 
@@ -37,7 +35,6 @@ public class CloudWatchWriter {
         this.logGroupName = logGroupName;
         this.logStreamName = logStreamName;
 
-        logger.debug("Init AWS client");
         awsLogsClient = new AWSLogsClient(); // this should pull the credentials automatically from the environment
 
         awsLogsClient.setRegion(Region.getRegion(region));
@@ -67,13 +64,13 @@ public class CloudWatchWriter {
                     sequenceTokenCache = putLogEventsResult.getNextSequenceToken();
 
                 } catch (final DataAlreadyAcceptedException daae) {
-                    logger.warn("DataAlreadyAcceptedException, will reset the token to the expected one", daae);
+                    System.out.println("DataAlreadyAcceptedException, will reset the token to the expected one");
                     sequenceTokenCache = daae.getExpectedSequenceToken();
                 } catch (final InvalidSequenceTokenException iste) {
-                    logger.warn("InvalidSequenceTokenException, will reset the token to the expected one", iste);
+                    System.out.println("InvalidSequenceTokenException, will reset the token to the expected one");
                     sequenceTokenCache = iste.getExpectedSequenceToken();
                 } catch (Exception e) {
-                    logger.error("Error writing logs", e);
+                    System.out.println("Error writing logs");
                 }
                 logEvents.clear();
             }
@@ -118,7 +115,7 @@ public class CloudWatchWriter {
             }
         }
         if (createLogGroup) {
-            logger.debug("Creating logGroup: " + logGroupName);
+            System.out.println("Creating logGroup: " + logGroupName);
             final CreateLogGroupRequest createLogGroupRequest = new CreateLogGroupRequest(logGroupName);
             awsLogsClient.createLogGroup(createLogGroupRequest);
         }
@@ -136,7 +133,7 @@ public class CloudWatchWriter {
         }
 
         if (createLogStream) {
-            logger.debug("Creating logStream: " + logStreamName);
+            System.out.println("Creating logStream: " + logStreamName);
             final CreateLogStreamRequest createLogStreamRequest = new CreateLogStreamRequest(logGroupName, logStreamName);
             awsLogsClient.createLogStream(createLogStreamRequest);
         }

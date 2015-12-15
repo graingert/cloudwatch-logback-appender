@@ -68,19 +68,23 @@ public class CloudWatchAppender extends AppenderBase<ILoggingEvent> {
             }
 
             if (System.getProperty("LOG_REGION") != null) {
-                region = System.getProperty("LOG_GROUP_NAME");
+                region = System.getProperty("LOG_REGION");
             }
             Regions logRegion = null;
             if (region != null) {
                 logRegion = Regions.fromName(region);
             }
 
+            int period = flushPeriod;
+            if (System.getProperty("LOG_FLUSH_PERIOD") != null) {
+                period = Integer.valueOf(System.getProperty("LOG_FLUSH_PERIOD"));
+            }
             final CloudWatchWriter writer = new CloudWatchWriter(group, stream, logRegion);
             cloudWatchWriter = writer;
 
             // start scheduler for flushing
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            schedulerFuture = scheduler.scheduleAtFixedRate(writer::flush, flushPeriod, flushPeriod, TimeUnit.SECONDS);
+            schedulerFuture = scheduler.scheduleAtFixedRate(writer::flush, period, period, TimeUnit.SECONDS);
         }
         return cloudWatchWriter;
     }
@@ -103,8 +107,10 @@ public class CloudWatchAppender extends AppenderBase<ILoggingEvent> {
     @Override
     public void stop() {
         super.stop();
-        schedulerFuture.cancel(false);
-        getCloudWatchWriter().flush();
+        if(schedulerFuture != null) {
+            schedulerFuture.cancel(false);
+            getCloudWatchWriter().flush();
+        }
     }
 
     /**
