@@ -1,7 +1,7 @@
 CloudWatchAppender
 ==================
 
-Emits log4j events into AWS CloudWatch streams.
+Emits logback events into AWS CloudWatch streams.
 
 ## Build
 
