@@ -5,43 +5,43 @@ Emits log4j events into AWS CloudWatch streams.
 
 ## Build
 
-    $ git clone git@github.com:Virtual-Instruments/cloudwatch-log4j-appender.git
+    $ git clone https://github.com/brick-commerce/cloudwatch-logback-appender
     $ cd CloudWatchAppender
     $ mvn install
 
 ## Usage
 ```
-    <CloudWatchAppender name="CloudWatchAppender"
-                           awsLogGroupName="MyGroup"
-                           awsLogStreamName="CloudWatchAppender"
-                           awsLogStreamFlushPeriodInSeconds="5">
-      <PatternLayout>
-        <Pattern>%5p | %d{ISO8601}{UTC} | %t | %C | %M:%L | %m %ex %n</Pattern>
-      </PatternLayout>
-    </CloudWatchAppender>
+    <appender name="CloudWatchAppender" class="com.brickcommerce.aws.logging.CloudWatchAppender">
+        <logGroupName>MyGroup</logGroupName>
+        <region>eu-central-1</region>
+        <flushPeriod>5</flushPeriod>
+        <PatternLayout>
+            <Pattern>%5p | %d{ISO8601}{UTC} | %t | %C | %M:%L | %m %ex %n</Pattern>
+        </PatternLayout>
+    </appender>
+
 ```
 ## Configuration variables
 
-Optional log4j appender plugin attributes:
+Optional logback appender attributes:
 
-+ **awsLogGroupName**: the name of the AWS log group (default: "unknown").
-+ **awsLogStreamName**: the name of the AWS log stream inside the AWS log group from above (default: "Test Stream").
-  Might also be be overridden by the LOG_STREAM_NAME environment variable (see below).
-  Note that the stream name will always be suffixed by the current timestamp.
-  This means that every time the logger restarts, it will create a new log stream.
-+ **awsLogStreamFlushPeriodInSeconds**: the period of the flusher (default: 5).
++ **logGroupName**: the name of the AWS log group (default: "default").
++ **logStreamName**: the name of the AWS log stream inside the AWS log group from above (default: Instancename_timestamp).
++ **region** the aws region where logs should be saved (default: AWS default)
++ **flushPeriod**: the period of the flusher in seconds (default: 10).
+ 
+Those parameters might also be be overridden by environment variable (see below).
 
 ## Environment variables
 
-Your AWS credentials should be specified in the AWS environment in the standard way.
-For testing purposes, you can override the credentials in the environment:
-
-+ **AWS_ACCESS_KEY**: sets the AWS Access Key.
-+ **AWS_SECRET_KEY**: sets the AWS Secret Key.
+Your AWS credentials should be specified in the standard way.
 
 You can also supply the AWS log stream name via environment:
 
++ **LOG_GROUP_NAME**: sets the AWS log group name.
 + **LOG_STREAM_NAME**: sets the AWS log stream name.
++ **LOG_REGION**: set the AWS region
++ **LOG_FLUSH_PERIOD**: set the period for flushing logs to cloud watch
 
 ## License
 
