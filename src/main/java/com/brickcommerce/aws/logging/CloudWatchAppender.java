@@ -15,8 +15,6 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
-import java.time.LocalDateTime;
-import java.time.ZoneOffset;
 import java.util.Date;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -30,11 +28,11 @@ public class CloudWatchAppender extends AppenderBase<ILoggingEvent> {
     @Setter
     private int flushPeriod = 10;
     @Setter
-    private String region;
+    private String region = "eu-central-1";
     @Setter
     private String logGroupName = "default";
     @Setter
-    private String logStreamName;
+    private String logStreamName = retrieveInstanceId();
     @Setter
     PatternLayout patternLayout = new PatternLayout();
 
@@ -54,37 +52,37 @@ public class CloudWatchAppender extends AppenderBase<ILoggingEvent> {
             // determine the configuration in the follwing order:
             // env variables, logback parameters, default values
 
-            String group = System.getProperty("LOG_GROUP_NAME");
-            if (group == null) {
-                group = logGroupName;
+            if (System.getProperty("LOG_GROUP_NAME") != null) {
+                logGroupName = System.getProperty("LOG_GROUP_NAME");
+            } else if (System.getenv("LOG_GROUP_NAME") != null) {
+                logGroupName = System.getenv("LOG_GROUP_NAME");
             }
 
-            String stream = System.getProperty("LOG_STREAM_NAME");
-            if (stream == null) {
-                stream = logStreamName;
-            }
-            if (stream == null) {
-                stream = retrieveInstanceId() + "_" + LocalDateTime.now().toEpochSecond(ZoneOffset.UTC);
+            if (System.getProperty("LOG_STREAM_NAME") != null) {
+                logStreamName = System.getProperty("LOG_STREAM_NAME");
+            } else if (System.getenv("LOG_STREAM_NAME") != null) {
+                logStreamName = System.getenv("LOG_STREAM_NAME");
             }
 
             if (System.getProperty("LOG_REGION") != null) {
                 region = System.getProperty("LOG_REGION");
+            } else if (System.getenv("LOG_REGION") != null) {
+                region = System.getenv("LOG_REGION");
             }
-            Regions logRegion = null;
-            if (region != null) {
-                logRegion = Regions.fromName(region);
+            Regions logRegion = Regions.fromName(region);
+
+            if (System.getProperty("LOG_FLUSH_PERIOD") != null) {
+                flushPeriod = Integer.valueOf(System.getProperty("LOG_FLUSH_PERIOD"));
+            } else if (System.getenv("LOG_FLUSH_PERIOD") != null) {
+                flushPeriod = Integer.valueOf(System.getenv("LOG_FLUSH_PERIOD"));
             }
 
-            int period = flushPeriod;
-            if (System.getProperty("LOG_FLUSH_PERIOD") != null) {
-                period = Integer.valueOf(System.getProperty("LOG_FLUSH_PERIOD"));
-            }
-            final CloudWatchWriter writer = new CloudWatchWriter(group, stream, logRegion);
+            final CloudWatchWriter writer = new CloudWatchWriter(logGroupName, logStreamName, logRegion);
             cloudWatchWriter = writer;
 
             // start scheduler for flushing
             ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
-            schedulerFuture = scheduler.scheduleAtFixedRate(writer::flush, period, period, TimeUnit.SECONDS);
+            schedulerFuture = scheduler.scheduleAtFixedRate(writer::flush, flushPeriod, flushPeriod, TimeUnit.SECONDS);
         }
         return cloudWatchWriter;
     }
