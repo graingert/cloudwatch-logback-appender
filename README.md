@@ -46,3 +46,6 @@ You can also supply the AWS log stream name via environment:
 ## License
 
 Licensed under the Apache License, Version 2.0: http://www.apache.org/licenses/LICENSE-2.0
+
+## Issues
+Raise issues on https://github.com/brick-commerce/cloudwatch-logback-appender/issues
